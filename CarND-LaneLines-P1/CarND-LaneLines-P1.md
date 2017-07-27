@@ -42,7 +42,7 @@ Fourth, keeping the area which we care about by croping the image with a interse
 Fifth, using Hough transform to convert image space to polar space to find out the best lines from many candidate lines.<br/>
 ![alt text][solidWhiteCurve_output]
 
-# How I modify draw_lines()
+How I modify draw_lines()
 Step 1: Dividing the lines into two group, left and right, by calculating the slopes of the lines.<br/>
 Step 2: Calculate the mean of slope of left lines.<br/>
 Step 3: In the group of left lines, picking the top right-most point. According to straight line equation, y = ax + b. I can derive b give x, y, and a.<br/>
