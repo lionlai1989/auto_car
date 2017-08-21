@@ -1,8 +1,30 @@
 Traffic Sign Recognition
 =========================== 
 
+#### Overview
+
+In this project, I will use what I've learned about deep neural networks and convolutional neural networks to classify traffic signs. I will train and validate a model so it can classify traffic sign images using the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset). After the model is trained, I will then try out your model on images of German traffic signs that I find on the web.
+
+#### Dependencies
+This lab requires:
+
+* [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit)
+
+The lab environment can be created with CarND Term1 Starter Kit. Click [here](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) for the details.
+
+#### Dataset and Repository
+
+1. Download the data set. The classroom has a link to the data set in the "Project Instructions" content. This is a pickled dataset in which we've already resized the images to 32x32. It contains a training, validation and test set.
+
+2. Clone the project, which contains the Ipython notebook and the writeup template.
+```sh
+git clone https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project
+cd CarND-Traffic-Sign-Classifier-Project
+jupyter notebook Traffic_Sign_Classifier.ipynb
+```
+
 The goals / steps of this project are the following:
-* Load the data set
+* Load the data
 * Explore, summarize and visualize the data set
 * Design, train and test a model architecture
 * Use the model to make predictions on new images
@@ -184,8 +206,8 @@ Hyperparameters:
 
 My final model results were:
 * training set accuracy is 0.988
-* validation set accuracy is 0.953
-* test set accuracy is 0.929
+* validation set accuracy is 0.956
+* test set accuracy is 0.938
 
 ![alt text][accuracy_all_dataset]
  
@@ -218,16 +240,14 @@ Here are the results of the prediction:
 | Image			        |     Prediction	        					| 
 |:---------------------:|:---------------------------------------------:| 
 | Speed limit (70km/h)  | General caution   					    	| 
-| Speed limit (20km/h)	| Speed limit (20km/h)							|
-| Speed limit (30km/h)	| Speed limit (30km/h)   						|
-| stop	      			| stop	      					 				|
+| Speed limit (30km/h)	| Speed limit (30km/h)							|
+| Speed limit (60km/h)	| Speed limit (60km/h)   						|
+| stop	      			| Traffic signals	      		 				|
 | General caution		| General caution	   							|
 
-The model was able to correctly guess 4 of the 5 traffic signs, which gives an accuracy of 80%. This compares favorably to the accuracy on the test set of 92.9%.
+The model was able to correctly guess 3 of the 5 traffic signs, which gives an accuracy of 60%. This compares favorably to the accuracy on the test set of 93.8%.
 
 ![alt text][test_prec_recall]
-
-As you can see, "Speed limit (70km/h)" is lable No.4, it has pretty good precision and recall. Thus there are only one possibility. The model has high possibility to predict sign to be "General caution"(No.18) when input is "Speed limit (70km/h)".
 
 ### 3. Here are the top 5 softmax probabilities for each image along with the sign type of each probability.
 
@@ -269,4 +289,4 @@ Visualization of conv3
 
 ![alt text][visualize_feat_conv3]
 
-To be honest, conv2 and conv3 are confusing to me. I can't see how they are used for later classification. Amazing CNN!!!
+To be honest, conv2 and conv3 are confusing to me. I can't see how they can be used for later classification. Amazing CNN!!!
