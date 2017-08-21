@@ -32,11 +32,14 @@ The goals / steps of this project are the following:
 [bar_test_from_web_2]: ./fig_photo/bar_test_from_web_2.png "Image 3 top 5 softmax probabilities"
 [bar_test_from_web_3]: ./fig_photo/bar_test_from_web_3.png "Image 4 top 5 softmax probabilities"
 [bar_test_from_web_4]: ./fig_photo/bar_test_from_web_4.png "Image 5 top 5 softmax probabilities"
+[visualize_feat_conv1]: ./fig_photo/visualize_feat_conv1.png "Visualization of Convolution Layer 1"
+[visualize_feat_conv2]: ./fig_photo/visualize_feat_conv2.png "Visualization of Convolution Layer 2"
+[visualize_feat_conv3]: ./fig_photo/visualize_feat_conv3.png "Visualization of Convolution Layer 3"
 
 ## Writeup / README
 
 #### This file includes all the [rubric points](https://review.udacity.com/#!/rubrics/481/view) and how I addressed each one.
-#### Here is a link to my [project code](https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project/blob/master/Traffic_Sign_Classifier.ipynb)
+#### Here is a link to my [project code](https://github.com/lionlai1989/auto_car/blob/master/CarND-Traffic-Sign-Classifier-Project/Traffic_Sign_Classifier.ipynb)
 
 ## Data Set Summary & Exploration
 
@@ -132,21 +135,21 @@ My final model consisted of the following layers:
 | Layer         		|     Description	        					| 
 |:---------------------:|:---------------------------------------------:| 
 | Input         		| 32x32x1 Grayscale image   					| 
-| Convolution 5x5     	| 1x1 stride, same padding, outputs 28x28x18 	|
+| Convolution 5x5     	| 1x1 stride, same padding, outputs 28x28x24 	|
 | RELU					|												|
-| Max pooling	      	| 2x2 stride,  outputs 14x14x18 				|
-| Convolution 5x5	    | 1x1 stride, same padding, outputs 10x10x48    |
+| Max pooling	      	| 2x2 stride,  outputs 14x14x24 				|
+| Convolution 5x5	    | 1x1 stride, same padding, outputs 10x10x64    |
 | RELU					|												|
-| Max pooling	      	| 2x2 stride,  outputs 5x5x48   				|
+| Max pooling	      	| 2x2 stride,  outputs 5x5x64   				|
 | Convolution 3x3	    | 1x1 stride, same padding, outputs 3x3x96      |
 | RELU					|												|
 | Max pooling	      	| 1x1 stride,  outputs 3x3x96   				|
-| Flatten       		| outputs 1200  								|
-| Fully connected 1200	| outputs 360  									|
+| Flatten       		| outputs 288  								|
+| Fully connected 288	| outputs 480  									|
 | RELU					|												|
-| Fully connected 360	| outputs 252  									|
+| Fully connected 480	| outputs 336  									|
 | RELU					|												|
-| Fully connected 252	| output 43  									|
+| Fully connected 336	| output 43  									|
 | Softmax				| output 43    									| 
 
 ### 5. How I trained the model. This discussion includes the type of optimizer, the batch size, number of epochs and any hyperparameters such as learning rate.
@@ -159,30 +162,30 @@ Hyperparameters:
 
 ### 6. Description of the approach taken for finding a solution and getting the validation set accuracy to be at least 0.93.
 
-* I believed Lenet-5 architecture is capable of classifying digits as well as traffic signs. Lenet-5 classify digits by theirs shape. For that reason, traffic signs are just the images that have more complicate shapes than digits. Therefore, I believe that Lenet-5 is able to classify traffic signs by increasing the number of its neurons and layers.
+* I believed Lenet-5 architecture is capable of classifying digits as well as traffic signs. Lenet-5 classify digits by theirs shape. For this reason, traffic signs are just the images that have more complicate shapes than digits. Therefore, I believe that Lenet-5 is able to classify traffic signs by increasing the number of its neurons and layers.
 
-* At the begining, I used original training dataset and default Lenet-5 architecture to train the model.  Digits and The validation accuracy is 0.89. 
+* At the begining, I used original training dataset and default Lenet-5 architecture to train the model. Digits and The validation accuracy was 0.89.
 
-* Traffic signs' complexity is higher than digit's. I believe that more number of neurons in conv layers can extract more complex features. Therefore, I tripled the size of filter and fully connected layer. The validation accuracy is improved but not enough to pass 0.93.
+* Traffic signs' complexity is higher than digit's. I believe that more number of neurons in conv layers can extract more complex features. Therefore, I tripled the number of filters and fully connected layers. The validation accuracy was improved but not enough to pass 0.93.
 
-* I discovered that the distribution among types of signs is not uniform. It's necessary to augment the images which has fewer number in training dataset.
+* I observed that the distribution among types of signs was not uniform. It's necessary to augment the images which has fewer number in training dataset.
 
-* After applying rotation, shear and adding uniform noise to selected images, the validation's accuracy is improved. However, the accuracy can not stably stay higher than 0.93. Thus, I decide to plot validation dataset's precision and recall to see which label keep dragging down the accuracy.
+* After applying rotation, shear and adding uniform noise to selected images, the validation's accuracy was improved. However, the accuracy could not stably stay higher than 0.93. Thus, I decided to plot validation dataset's precision and recall to show which label keep dragging down the accuracy.
 
 ![alt text][valid_prec_recall]
 
 ![alt text][valid_f1_score]
 
-* No.0, 24, 26, 27, 41 have really bad precision and recall. Therefore, I decide to add more augmented images of them. This time I still shear them but with different angles.
+* No.0, 24, 26, 27, 41 had really bad precision and recall. Therefore, I decided to add more augmented images of them. This time I still sheared them but with different angles.
 
-* The result didn't improved. In fact, it gets worse on some other labels too. I decide to add more neurons and add one extra conv layer.
+* The result didn't improved. In fact, it got worse on some other labels too. For that reason, I decide to add more neurons and add one extra conv layer.
 
-* Now the validation accuracy can stably stay stay higher than 0.93.
+* Now the validation accuracy can stably reach higher than 0.93.
 
 My final model results were:
-* training set accuracy is 0.998
-* validation set accuracy is 0.962
-* test set accuracy is 0.946
+* training set accuracy is 0.988
+* validation set accuracy is 0.953
+* test set accuracy is 0.929
 
 ![alt text][accuracy_all_dataset]
  
@@ -214,17 +217,17 @@ Here are the results of the prediction:
 
 | Image			        |     Prediction	        					| 
 |:---------------------:|:---------------------------------------------:| 
-| Speed limit (70km/h)  | Speed limit (70km/h)   						| 
+| Speed limit (70km/h)  | General caution   					    	| 
 | Speed limit (20km/h)	| Speed limit (20km/h)							|
-| Speed limit (30km/h)	| Slippery road   								|
+| Speed limit (30km/h)	| Speed limit (30km/h)   						|
 | stop	      			| stop	      					 				|
 | General caution		| General caution	   							|
 
-The model was able to correctly guess 4 of the 5 traffic signs, which gives an accuracy of 80%. This compares favorably to the accuracy on the test set of 94.6%.
+The model was able to correctly guess 4 of the 5 traffic signs, which gives an accuracy of 80%. This compares favorably to the accuracy on the test set of 92.9%.
 
 ![alt text][test_prec_recall]
 
-As you can see, "Speed limit (30km/h)" is lable No.1, it has pretty good precision and recall. Thus there are only one possibility. Slippery road(No.23) has really bad precision.
+As you can see, "Speed limit (70km/h)" is lable No.4, it has pretty good precision and recall. Thus there are only one possibility. The model has high possibility to predict sign to be "General caution"(No.18) when input is "Speed limit (70km/h)".
 
 ### 3. Here are the top 5 softmax probabilities for each image along with the sign type of each probability.
 
@@ -248,8 +251,22 @@ For the fifth image
 
 ![alt text][bar_test_from_web_4]
 
-## Visualizing the Neural Network (See Step 4 of the Ipython notebook for more details)
+## Visualizing the Neural Network
 
-###1. The visual output of my trained network's feature maps. What characteristics did the neural network use to make classifications?
+### 1. The visual output of my trained network's feature maps. What characteristics did the neural network use to make classifications?
 
+Image from web was fed into the network. Here are what they look like.
 
+Visualization of conv1
+
+![alt text][visualize_feat_conv1]
+
+Visualization of conv2
+
+![alt text][visualize_feat_conv2]
+
+Visualization of conv3
+
+![alt text][visualize_feat_conv3]
+
+To be honest, conv2 and conv3 are confusing to me. I can't see how they are used for later classification. Amazing CNN!!!
