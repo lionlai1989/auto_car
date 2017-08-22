@@ -249,6 +249,16 @@ The model was able to correctly guess 3 of the 5 traffic signs, which gives an a
 
 ![alt text][test_prec_recall]
 
+For the first web image, I intentionally make the size of the sign smaller than it normally should be when cropping the original image. When I was training the model, I once augmented the data with cropped images(zoom in). But the result got worse. Therefore, I believe the size of a sign in an image can influence the training and decode process. In this case, the size of the sign itself is too small. I believe it's the reason that make it hard to recognize by my model.
+
+For the second web image, it looks easy to me to recognize.
+
+For the third web image, it looks easy to me to recognize.
+
+For the fourth web image, it looks easy to me to recognize. But my model recognized incorrectly. The precision and recall of stop sign are pretty good. For traffic signals, the precision and recall are not so good but not the worst. The character of stop looks a bit of jittered to me. Perhaps it's the reason for incorrect recognization.
+
+For the fifth web image, it looks easy to me to recognize.
+
 ### 3. Here are the top 5 softmax probabilities for each image along with the sign type of each probability.
 
 For the first image
