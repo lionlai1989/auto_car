@@ -1,1 +1,2 @@
-CarND-Behavioral-Cloning-P3/data/* filter=lfs diff=lfs merge=lfs -text
+CarND-Behavioral-Cloning-P3/data/** filter=lfs diff=lfs merge=lfs -text
+CarND-Traffic-Sign-Classifier-Project/traffic-signs-data/** filter=lfs diff=lfs merge=lfs -text
