@@ -93,7 +93,6 @@ def data_gen(samples, batch_size, aug):
 				# Accumulate the steering angle
 				#before_filter_steer_hist.append((int(np.digitize(center_steer, steer_bins, right=True))-10)/10)
 
-			# Crop image to only see section with road
 			X_train = np.array(images)
 			y_train = np.array(steering)
 			yield shuffle(X_train, y_train)

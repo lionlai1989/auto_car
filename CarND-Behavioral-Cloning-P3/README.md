@@ -46,11 +46,11 @@ Using Udacity provided simulator and **drive.py**, the car can be driven in auto
 ![alt text][model_architecture]
 
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21)  
+The model contains dropout layers in order to reduce overfitting. 
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). It was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+The model was trained and validated on different data sets to ensure that the model was not overfitting. It was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
+The model used an adam optimizer, so the learning rate was not tuned manually.
 
 Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road. For details about how I choosed and created the training data, see the next section.
 
