@@ -15,6 +15,7 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
+[final_text]: ./output_images/final_text.png
 [final]: ./output_images/final.png
 [find_curve]: ./output_images/find_curve.png
 [window_fitting]: ./output_images/window_fitting.png
@@ -91,15 +92,15 @@ In step 5 and 6,
 
 ![alt text][find_curve]
 
-#### 5. Calculated the radius of curvature of the lane.
+#### 5. Calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-In step 6, there is a `get_curvature(ploty, left_fit, right_fit, leftx, rightx, y_axis_left, y_axis_right)` on the last section.
+In step 6, there is a `get_curvature(ploty, left_fit, right_fit, leftx, rightx, y_axis_left, y_axis_right)` and a `get_pos_center(left_fitx, right_fitx)` on the last section.
 
 #### 6. Warp the detected lane boundaries back onto the original image such that the lane area is identified clearly.
 
 I implemented this step in step 7 in my code in `advanced_lane_lines.ipynb` in the function `warp_lane_back()`. Using inverse perspective transform matrix to warp the polynomial lane line back to original lane line. Here is an example of my result on a test image:
 
-![alt text][final]
+![alt text][final_text]
 
 ---
 
@@ -141,6 +142,35 @@ def binary_pipeline(image, s_thresh=(170, 255), sx_thresh=(20, 100)):
     
     return binary_output= 0
     return binary
+```
+
+One thing to note is that I use L and S channel of HLS color space and S and V channel of HSV color space. Here is how it was implemented.
+
+```python
+def hsv_select(img, thresh=(0, 255)):
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) # H in [0,180], S and V in [0,255]
+    s_channel = hsv[:,:,1]
+    v_channel = hsv[:,:,2]
+    bin_s = np.zeros_like(s_channel)
+    bin_v = np.zeros_like(v_channel)
+    bin_s[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
+    bin_v[(v_channel > thresh[0]) & (v_channel <= thresh[1])] = 1
+    binary_output = np.zeros_like(hsv[:,:,0])
+    binary_output[(bin_s==1) & (bin_v==1)] = 1
+    return binary_output
+
+def hls_select(img, thresh=(0, 255)):
+    hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS) # H in [0,180], L and S in [0,255]
+    s_channel = hls[:,:,2]
+    l_channel = hls[:,:,1]
+    bin_s = np.zeros_like(s_channel)
+    bin_s[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
+    bin_l = np.zeros_like(l_channel)
+    bin_l[(l_channel > thresh[0]) & (l_channel <= thresh[1])] = 1
+    
+    binary_output = np.zeros_like(hls[:,:,0])
+    binary_output[(bin_s==1) & (bin_l==1)] = 1
+    return binary_output
 ```
 
 After tuning the binary pipeline, there are still some frames whose lane lines can not be identify correctly. I think it's not efficient to stick to tune the binary pipeline.
