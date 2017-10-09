@@ -119,7 +119,7 @@ Here's a [link to my video result][project_video]
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
 
 The first problem is to create a decent threshold binary image, which would be used in later process. If my pipeline can not find lane lines correctly, the later process can not identify lane lines. I use combined, HLS, and HSV binary method to create a threshold
-binary image like below. However, it didn't use all three method to create a binary image. It chose 2 out of 3 randomly by this line. `binary_output[binary >= 1] = 1`.
+binary image like below. However, it didn't use all three method to create a binary image. It chose 2 out of 3 randomly by this line. `binary_output[binary >= 3] = 1`.
 
 ```python
 def binary_pipeline(image, s_thresh=(170, 255), sx_thresh=(20, 100)):
@@ -133,15 +133,16 @@ def binary_pipeline(image, s_thresh=(170, 255), sx_thresh=(20, 100)):
     combined[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 1))] = 1
     hls_binary = hls_select(img, thresh=(85, 255))
     hsv_binary = hsv_select(img, thresh=(85, 255))
-
-    binary = combined + hls_binary + hsv_binary
+    white_binary = select_white(img)
+    yellow_binary = select_yellow(img)
+    binary = combined + hls_binary + hsv_binary + white_binary + yellow_binary
     #print(binary.shape)
     
     binary_output =  np.zeros_like(binary)
-    binary_output[binary >= 1] = 1
+    binary_output[binary >= 3] = 1
     
-    return binary_output= 0
-    return binary
+    return binary_output
+
 ```
 
 One thing to note is that I use L and S channel of HLS color space and S and V channel of HSV color space. Here is how it was implemented.
@@ -173,14 +174,25 @@ def hls_select(img, thresh=(0, 255)):
     return binary_output
 ```
 
-After tuning the binary pipeline, there are still some frames whose lane lines can not be identify correctly. I think it's not efficient to stick to tune the binary pipeline.
-
-In sliding window search, if there are many noises on the images, the noises would affect the searching process. Therefore, I use following lines to remove the noises that exist on the side of images.
+Besides, adding `select_yellow()` and `select_white` to pick yellow and white line specifically.
 
 ```python
-warp_bin_undist[:,0:warp_bin_undist.shape[1]//4-150] = 0
-warp_bin_undist[:,warp_bin_undist.shape[1]*3//4+150:] = 0
-warp_bin_undist[:,warp_bin_undist.shape[1]//2-100:warp_bin_undist.shape[1]//2+100] = 0
+def select_yellow(img):
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    lower = np.array([20,60,60]) # [20,60,60]
+    upper = np.array([38,174,250]) # [38,174,250]
+    mask = cv2.inRange(hsv, lower, upper)
+
+    return mask
+
+def select_white(img):
+    lower = np.array([202,202,202])
+    upper = np.array([255,255,255])
+    mask = cv2.inRange(img, lower, upper)
+
+    return mask
 ```
+
+After tuning the binary pipeline, there are still some frames whose lane lines can not be identify correctly. I think it's not worth to stick to tune the binary pipeline.
 
 However, there still are some frames would fail catastrophically. Thus, I used curvature of two detected lanes to decide whether the result polynomial is a reasonable fit. First, the curvature has to be inside a reasonable range. Second, the difference between the current curvature and last stored curvature has to be small enough.
