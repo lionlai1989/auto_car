@@ -114,15 +114,13 @@ Here's a [link to my video result][project_video]
 
 ### Discussion
 
-#### 1. Discussion of problems / issues I faced in my implementation of this project.  Where will my pipeline likely fail?  What did I do to make it more robust?
+#### 1. Create binary threshold images
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
-
-The first problem is to create a decent threshold binary image, which would be used in later process. If my pipeline can not find lane lines correctly, the later process can not identify lane lines. I use combined, HLS, and HSV binary method to create a threshold
-binary image like below. However, it didn't use all three method to create a binary image. It chose 2 out of 3 randomly by this line. `binary_output[binary >= 3] = 1`.
+The first problem is to create a decent threshold binary image, which would be used in later process. If my pipeline can not find lane lines correctly, the later process can not identify lane lines. I use RGB, HLS, and HSV binary method to create a threshold
+binary image like below. `binary_output[binary >= 1] = 1` selects pixels whose value are greater than 1.
 
 ```python
-def binary_pipeline(image, s_thresh=(170, 255), sx_thresh=(20, 100)):
+def binary_pipeline(image):
     img = np.copy(image)
     
     gradx = abs_sobel_thresh(img, orient='x', thresh_min=70, thresh_max=128)
@@ -131,68 +129,42 @@ def binary_pipeline(image, s_thresh=(170, 255), sx_thresh=(20, 100)):
     dir_binary = dir_threshold(img, sobel_kernel=15, thresh=(0.9, 1.1))
     combined = np.zeros_like(dir_binary)
     combined[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 1))] = 1
-    hls_binary = hls_select(img, thresh=(85, 255))
-    hsv_binary = hsv_select(img, thresh=(85, 255))
-    white_binary = select_white(img)
-    yellow_binary = select_yellow(img)
-    binary = combined + hls_binary + hsv_binary + white_binary + yellow_binary
-    #print(binary.shape)
+    
+    y_hls_binary = hls_select(img, [20,120,80], [38,200,255])
+    y_hsv_binary = hsv_select(img, [20,60,60], [38,174,250])
+
+    w_rgb_binary = rgb_select(img, [202,202,202], [255,255,255])
+    w_hsv_binary = hsv_select(img, [20,0,200], [255,80,255])
+   
+    binary = y_hls_binary + y_hsv_binary + w_rgb_binary + w_hsv_binary
     
     binary_output =  np.zeros_like(binary)
-    binary_output[binary >= 3] = 1
+    binary_output[binary >= 1] = 1
     
     return binary_output
 
 ```
 
-One thing to note is that I use L and S channel of HLS color space and S and V channel of HSV color space. Here is how it was implemented.
+#### 2. Using sliding window to search lane pixels
+
+After tuning the binary pipeline, the next important step is how to detect Lane Pixels. I modified codes on step 5 below after finding udacity's original code can not find lane pixels correctly.  
 
 ```python
-def hsv_select(img, thresh=(0, 255)):
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) # H in [0,180], S and V in [0,255]
-    s_channel = hsv[:,:,1]
-    v_channel = hsv[:,:,2]
-    bin_s = np.zeros_like(s_channel)
-    bin_v = np.zeros_like(v_channel)
-    bin_s[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
-    bin_v[(v_channel > thresh[0]) & (v_channel <= thresh[1])] = 1
-    binary_output = np.zeros_like(hsv[:,:,0])
-    binary_output[(bin_s==1) & (bin_v==1)] = 1
-    return binary_output
+# Use window_width/2 as offset because convolution signal reference is at right side of window, not center of window
+offset = window_width/2
 
-def hls_select(img, thresh=(0, 255)):
-    hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS) # H in [0,180], L and S in [0,255]
-    s_channel = hls[:,:,2]
-    l_channel = hls[:,:,1]
-    bin_s = np.zeros_like(s_channel)
-    bin_s[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
-    bin_l = np.zeros_like(l_channel)
-    bin_l[(l_channel > thresh[0]) & (l_channel <= thresh[1])] = 1
-    
-    binary_output = np.zeros_like(hls[:,:,0])
-    binary_output[(bin_s==1) & (bin_l==1)] = 1
-    return binary_output
+# Find the best left centroid by using past left center as a reference      
+l_min_index = int(max(l_center+offset-margin,0))
+l_max_index = int(min(l_center+offset+margin,warped.shape[1]))
+
+if np.argmax(conv_signal[l_min_index:l_max_index]) == 0:
+    l_center = np.argmax(conv_signal[l_min_index:l_max_index])+l_min_index+offset+offset/2
+else:
+    l_center = np.argmax(conv_signal[l_min_index:l_max_index])+l_min_index-offset
 ```
 
-Besides, adding `select_yellow()` and `select_white` to pick yellow and white line specifically.
+**The really important point** is that if the current window can not detect any lane, the next window has to start from the center point of current window. Otherwise, the next window would shift to more left or right comparing to current window.
 
-```python
-def select_yellow(img):
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower = np.array([20,60,60]) # [20,60,60]
-    upper = np.array([38,174,250]) # [38,174,250]
-    mask = cv2.inRange(hsv, lower, upper)
+#### 3. Assessing the curve's correctness by calculating their curvature
 
-    return mask
-
-def select_white(img):
-    lower = np.array([202,202,202])
-    upper = np.array([255,255,255])
-    mask = cv2.inRange(img, lower, upper)
-
-    return mask
-```
-
-After tuning the binary pipeline, there are still some frames whose lane lines can not be identify correctly. I think it's not worth to stick to tune the binary pipeline.
-
-However, there still are some frames would fail catastrophically. Thus, I used curvature of two detected lanes to decide whether the result polynomial is a reasonable fit. First, the curvature has to be inside a reasonable range. Second, the difference between the current curvature and last stored curvature has to be small enough.
+However, there still are some frames would fail catastrophically. Thus, I used curvature of two detected lanes to decide whether the result polynomial is a reasonable fit. First, the curvature has to be greater than a reasonable value. Second, the difference between the current curvature and last stored curvature has to be within a reasonable range.
