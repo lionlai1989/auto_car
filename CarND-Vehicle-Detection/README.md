@@ -129,7 +129,7 @@ Ultimately I searched on two window scales and using YUV 3-channel HOG features 
 ### Video Implementation
 
 #### 1. Here is a link to my final video output. My pipeline could perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes may occur during the driving).
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./out_project_video.mp4)
 
 #### 2. Using heatmap to filter out false positives.
 
