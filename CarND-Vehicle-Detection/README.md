@@ -154,7 +154,7 @@ heat_window_img = draw_labeled_bboxes(cp_image, labels, (0,0,255))
 
 Before applying heatmap:  
 
-![alt text][series1]
+![alt text][test1]
 
 After applying heatmap:  
 
