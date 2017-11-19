@@ -46,8 +46,6 @@ Important Note:
 [sum_series]: ./output_images/sum_series.jpg
 [box_heat]: ./output_images/box_heat.jpg
 
-[out_project_video]: ./out_project_video.mp4
-
 ---
 
 ### Spatial Bins, Color Histogram, and Histogram of Oriented Gradients (HOG)
@@ -94,7 +92,7 @@ Therefore, I picked `color_space = YUV`, `orient = 9`, `pix_per_cell = 16`, `cel
 #### 1. Sliding window search. Determine window size and how much to overlap windows.
 
 Using `window_size = 32, 48, 64, 96` to test on examle images helps to find out the final value used on pipeline. (in code cell 10)  
-As you can see, `window_size = 32` is too small, which captue many false positive (FP) images. `window_size = 64` doesn't make much difference compare with `window_size = 96`, but 96 can capture more precisely when can is near to camera.
+As you can see, `window_size = 32` is too small, which captue many false positive (FP) images. `window_size = 64` doesn't make much difference compare with `window_size = 96`, but 96 can perform better when the car is near to camera.
 Therefore, I finally chose `window_size = 48, 96` to be the window sizes.  
 
 ![alt text][window_size_32]
@@ -175,7 +173,17 @@ First, false positive boxes were still captured by the SVM classifier. Adding a 
     heat = apply_threshold(sum(q_fp)/float(len(q_fp)), 4)
 ```
 
-In the previous heatmap process, all frames are considered respectively. The summatioin of boxes are used by later steps only in current frame. The boxes have no connections from the previous frame to the current frame. But now, using `q_fp` to store the summation of boxes in a row, it can filter out false positive boxes. The feasibility of this method is based on the fact that the false positive boxes would not occur continuously, at least less than 4. If the FP boxes occur continuously, this method may not work.  
+In the previous heatmap process, all frames are considered respectively. The summatioin of boxes are used by later steps only in current frame. The boxes have no connections from the previous frame to the current frame. But now, using `q_fp` to store the summation of boxes in a row, it can filter out false positive boxes. Here are the example images processed by this technic.
+
+![alt text][series1]
+![alt text][series2]
+![alt text][series3]
+![alt text][series4]
+![alt text][series5]
+![alt text][series6]
+![alt text][sum_series]
+
+The feasibility of this method is based on the fact that the false positive boxes would not occur continuously, at least less than 4. If the FP boxes occur continuously, this method may not work.  
 
 The second problem is how to smooth out the wobbly boxes. Again, similar to previous method, using a queue, `q_wobbly = deque(maxlen=12)`, can smooth out the wobbly boxes. The more elements `q_wobbly` has, the smoother the final boxes. But the boxes may have delay when marking the vehicles.  
 ```python
