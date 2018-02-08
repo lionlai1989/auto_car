@@ -2,6 +2,7 @@
 #include "tools.h"
 #include "Eigen/Dense"
 #include <iostream>
+#include <vector>
 
 using std::cin;
 using std::cout;
@@ -39,28 +40,33 @@ FusionEKF::FusionEKF()
          0, 0, 0.09, 0;
 
   MatrixXd H = MatrixXd(4, 4);
-  H = 1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
+  H << 1, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1, 0,
+       0, 0, 0, 1;
 
   MatrixXd F = MatrixXd(4, 4);
-  F = 1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
+  F << 1, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1, 0,
+       0, 0, 0, 1;
 
   MatrixXd P = MatrixXd(4, 4);
-  P = 1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
+  P << 1, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1, 0,
+       0, 0, 0, 1;
 
-  MatrixXd Q = Eigen::MatrixXd(4,4);
-  Q = 1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
+  MatrixXd Q = MatrixXd(4,4);
+  Q << 1, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1, 0,
+       0, 0, 0, 1;
+
+  VectorXd x = VectorXd(4);
+  x << 0, 0, 0, 0;
+
+  ekf_.Init(x, P, F, Q, H, R_laser_);
 }
 
 FusionEKF::~FusionEKF() {}
@@ -69,24 +75,26 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
 {
   /* Initialization */
   if (!is_initialized_) {
+    double px, py;
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /*
        * Convert radar from polar to cartesian coordinates.
        */
       cout << "Radar Init ..." << endl;
 
-      double ro = measurement_pack.raw_measurements_[0];
+      double rho = measurement_pack.raw_measurements_[0];
       double theta = measurement_pack.raw_measurements_[1];
-      double ro_dot = measurement_pack.raw_measurements_[2];
+      double rho_dot = measurement_pack.raw_measurements_[2];
 
-      double px = rho*cos(phi);
-      double py = rho*sin(phi);
+      px = rho*cos(theta);
+      py = rho*sin(theta);
     } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       cout << "Laser Init ..." << endl;
 
-      double px = measurement_pack.raw_measurements_[0];
-      double py = measurement_pack.raw_measurements_[1];
-
+      px = measurement_pack.raw_measurements_[0];
+      py = measurement_pack.raw_measurements_[1];
+    } else {
+      cout << "Sensor type is not radar nor laser. EXIT !!!" << endl; 
     }
     /*
      * Initialize the state ekf_.x_ with the first measurement.
@@ -94,14 +102,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
      */
     // first measurement
     cout << "EKF: " << endl;
-    x = VectorXd(4);
-    x << px, py, 0, 0;
+    ekf_.x_ << px, py, 0, 0;
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
     return;
   }
-
+  cout << "1" << endl;
   /* Prediction */
 
   /**
@@ -124,7 +131,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-    ekf_.updates(measurement_pack.raw_measurements_);
+    ekf_.Update(measurement_pack.raw_measurements_);
   } else {
     // Laser updates
   }

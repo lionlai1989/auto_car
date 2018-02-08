@@ -13,7 +13,7 @@ public:
   Eigen::VectorXd CalculateRMSE(const std::vector<Eigen::VectorXd> &estimations, 
                                 const std::vector<Eigen::VectorXd> &ground_truth);
 
-  Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd& x_state);
+  Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd &x_state);
 };
 
 #endif /* TOOLS_H_ */

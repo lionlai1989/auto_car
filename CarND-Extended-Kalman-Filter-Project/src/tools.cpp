@@ -33,7 +33,7 @@ for(unsigned int i=0; i < estimations.size(); ++i){
         residual = residual.array()*residual.array();
         rmse += residual;
 }
-
+return rmse;
 /*  for (size_t i1 = estimations.begin(), size_t i2 = ground_truth.begin();
        i1 != estimations.end() && i2 != ground_truth.end*();
        ++i1, ++i2) {
@@ -46,7 +46,7 @@ for(unsigned int i=0; i < estimations.size(); ++i){
   return sqrt(sum);*/
 }
 
-MatrixXd Tools::CalculateJacobian(const VectorXd& x_state)
+MatrixXd Tools::CalculateJacobian(const VectorXd &x_state)
 {
 
 

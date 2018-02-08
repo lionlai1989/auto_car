@@ -15,13 +15,13 @@ using json = nlohmann::json;
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
-std::string hasData(std::string s) {
+string hasData(string s) {
   auto found_null = s.find("null");
   auto b1 = s.find_first_of("[");
   auto b2 = s.find_first_of("]");
-  if (found_null != std::string::npos) {
+  if (found_null != string::npos) {
     return "";
-  } else if (b1 != std::string::npos && b2 != std::string::npos) {
+  } else if (b1 != string::npos && b2 != string::npos) {
     return s.substr(b1, b2 - b1 + 1);
   }
   return "";
@@ -45,22 +45,21 @@ int main()
     // The 2 signifies a websocket event
 
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
-      auto s = hasData(std::string(data));
+      auto s = hasData(string(data));
       if (s != "") {
         auto j = json::parse(s);
 
-        std::string event = j[0].get<std::string>();
+        string event = j[0].get<string>();
         
         if (event == "telemetry") {
           // j[1] is the data JSON object
-          
           string sensor_measurment = j[1]["sensor_measurement"];
           
           MeasurementPackage meas_package;
           istringstream iss(sensor_measurment);
           long long timestamp;
 
-          std::cout << sensor_measurment << std::endl;
+          cout << sensor_measurment << endl;
           // reads first element from the current line
           string sensor_type;
           iss >> sensor_type;
@@ -88,6 +87,7 @@ int main()
             iss >> timestamp;
             meas_package.timestamp_ = timestamp;
           }
+
           float x_gt;
           float y_gt;
           float vx_gt;
@@ -104,26 +104,23 @@ int main()
           ground_truth.push_back(gt_values);
           
           //Call ProcessMeasurment(meas_package) for Kalman filter
-          //fusionEKF.ProcessMeasurement(meas_package);       
-
+          fusionEKF.ProcessMeasurement(meas_package);       
+          cout << "2" << endl;
           //Push the current estimated x,y positon from the Kalman filter's state vector
-
-          VectorXd estimate(4);
-
           double p_x = fusionEKF.ekf_.x_(0);
           double p_y = fusionEKF.ekf_.x_(1);
           double v1  = fusionEKF.ekf_.x_(2);
           double v2 = fusionEKF.ekf_.x_(3);
-
+          VectorXd estimate(4);
           estimate(0) = p_x;
           estimate(1) = p_y;
           estimate(2) = v1;
           estimate(3) = v2;
-        
+          cout << "3" << endl;
           estimations.push_back(estimate);
 
           VectorXd RMSE = tools.CalculateRMSE(estimations, ground_truth);
-
+          cout << "4" << endl;
           json msgJson;
           msgJson["estimate_x"] = p_x;
           msgJson["estimate_y"] = p_y;
@@ -132,21 +129,22 @@ int main()
           msgJson["rmse_vx"] = RMSE(2);
           msgJson["rmse_vy"] = RMSE(3);
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
-          // std::cout << msg << std::endl;
+          // cout << msg << endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+          cout << "5" << endl;
         }
       } else {
-        
-        std::string msg = "42[\"manual\",{}]";
+        string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }
     }
   });
+  cout << "6" << endl;
 
   // We don't need this since we're not using HTTP but if it's removed the program
   // doesn't compile :-(
   h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data, size_t, size_t) {
-    const std::string s = "<h1>Hello world!</h1>";
+    const string s = "<h1>Hello world!</h1>";
     if (req.getUrl().valueLength == 1) {
       res->end(s.data(), s.length());
     } else {
@@ -156,19 +154,19 @@ int main()
   });
 
   h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
-    std::cout << "Connected!!!" << std::endl;
+    cout << "Connected!!!" << endl;
   });
 
   h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
     ws.close();
-    std::cout << "Disconnected" << std::endl;
+    cout << "Disconnected" << endl;
   });
 
   int port = 4567;
   if (h.listen(port)) {
-    std::cout << "Listening to port " << port << std::endl;
+    cout << "Listening to port " << port << endl;
   } else {
-    std::cerr << "Failed to listen to port" << std::endl;
+    cerr << "Failed to listen to port" << endl;
     return -1;
   }
   h.run();
