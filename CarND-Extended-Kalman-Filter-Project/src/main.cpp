@@ -98,13 +98,13 @@ int main()
           iss >> vy_gt;
           VectorXd gt_values(4);
           gt_values(0) = x_gt;
-          gt_values(1) = y_gt; 
+          gt_values(1) = y_gt;
           gt_values(2) = vx_gt;
           gt_values(3) = vy_gt;
           ground_truth.push_back(gt_values);
           
           //Call ProcessMeasurment(meas_package) for Kalman filter
-          fusionEKF.ProcessMeasurement(meas_package);       
+          fusionEKF.ProcessMeasurement(meas_package);
           cout << "2" << endl;
           //Push the current estimated x,y positon from the Kalman filter's state vector
           double p_x = fusionEKF.ekf_.x_(0);
