@@ -40,22 +40,19 @@ FusionEKF::FusionEKF()
          0, 0.0009, 0, 0,
          0, 0, 0.09, 0;
 
-  MatrixXd H = MatrixXd(4, 4);
-  H << 1, 0, 0, 0,
-       0, 1, 0, 0,
-       0, 0, 1, 0,
-       0, 0, 0, 1;
-
-  // state transition matrix
-  MatrixXd F = MatrixXd(4, 4);
-  F << 1, 0, 0, 0,
-       0, 1, 0, 0,
-       0, 0, 1, 0,
-       0, 0, 0, 1;
+  VectorXd x = VectorXd(4);
+  x << 0, 0, 0, 0;
 
   // state covariance matrix
   MatrixXd P = MatrixXd(4, 4);
   P << 1, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1000, 0,
+       0, 0, 0, 1000;
+
+  // state transition matrix
+  MatrixXd F = MatrixXd(4, 4);
+  F << 1, 0, 0, 0,
        0, 1, 0, 0,
        0, 0, 1, 0,
        0, 0, 0, 1;
@@ -67,10 +64,13 @@ FusionEKF::FusionEKF()
        0, 0, 1, 0,
        0, 0, 0, 1;
 
-  VectorXd x = VectorXd(4);
-  x << 0, 0, 0, 0;
+  MatrixXd H = MatrixXd(4, 4);
+  H << 1, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1, 0,
+       0, 0, 0, 1;
 
-  ekf_.Init(x, P, F, Q, H, R_laser_);
+  ekf_.Init(x, P, F, Q, H);
 }
 
 FusionEKF::~FusionEKF() {}
@@ -90,8 +90,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
       double theta = measurement_pack.raw_measurements_[1];
       double rho_dot = measurement_pack.raw_measurements_[2];
 
-      px = rho*cos(theta);
-      py = rho*sin(theta);
+      px = rho * cos(theta);
+      py = rho * sin(theta);
     } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       cout << "Laser Init ..." << endl;
 
@@ -105,19 +105,17 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
      * Create the covariance matrix.
      */
     // Handle small px, py
-    if(fabs(px) < 0.0001){
+    if (fabs(px) < 0.0001) {
         px = 0.1;
         cout << "init px too small" << endl;
     }
-    if(fabs(py) < 0.0001){
+    if (fabs(py) < 0.0001) {
         py = 0.1;
         cout << "init py too small" << endl;
     }
 
-    // first measurement
+    // first measurement. Assume velocity is 0.
     ekf_.x_ << px, py, 0, 0;
-    cout << "x_: " << ekf_.x_ << endl;
-
 
     previous_timestamp_ = measurement_pack.timestamp_;
     // done initializing, no need to predict or update
@@ -125,7 +123,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
     return;
   }
 
-  cout << "1" << endl;
   /* Prediction
    *
    * Update the state transition matrix F according to the new elapsed time.
@@ -133,7 +130,27 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
    * Update the covariance matrix of process noise .
    * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-
+  double dt = (measurement_pack.timestamp_ - previous_timestamp_);
+  dt = dt / 1000000.0; // convert micro second to second.
+  previous_timestamp_ = measurement_pack.timestamp_;
+  ekf_.F_ << 1, 0, dt, 0,
+             0, 1, 0, dt,
+             0, 0, 1, 0,
+             0, 0, 0, 1;
+  // Noise covariance matrix computation  
+  // Noise values from the task
+  float noise_ax = 9.0;
+  float noise_ay = 9.0;
+  // Precompute some usefull values to speed up calculations of Q
+  float dt_2 = dt * dt; //dt^2
+  float dt_3 = dt_2 * dt; //dt^3
+  float dt_4 = dt_3 * dt; //dt^4
+  float dt_4_4 = dt_4 / 4; //dt^4/4
+  float dt_3_2 = dt_3 / 2; //dt^3/2
+  ekf_.Q_ << dt_4_4 * noise_ax, 0, dt_3_2 * noise_ax, 0,
+             0, dt_4_4 * noise_ay, 0, dt_3_2 * noise_ay,
+             dt_3_2 * noise_ax, 0, dt_2 * noise_ax, 0,
+             0, dt_3_2 * noise_ay, 0, dt_2 * noise_ay;
   ekf_.Predict();
 
   /* Update
@@ -141,62 +158,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
    * Use the sensor type to perform the update step.
    * Update the state and covariance matrices.
    */
-
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-      cout << "Radar update" << endl;
-      cout << "before assign" << endl;
-      ekf_.hx_ = VectorXd(3);
-      cout << "after assign" << endl;
-      double px = ekf_.x_[0];
-      cout << "gan";
-      double py = ekf_.x_[1];
-      double vx = ekf_.x_[2];
-      double vy = ekf_.x_[3];
-
-      float rho;
-      float phi;
-      float rhodot;
-      cout << "a1";
-      if(fabs(px) < 0.0001 or fabs(py) < 0.0001){
-        cout << "a2";
-        if(fabs(px) < 0.0001){
-          px = 0.0001;
-          cout << "px too small" << endl;
-        }
-
-        if(fabs(py) < 0.0001){
-          py = 0.0001;
-          cout << "py too small" << endl;
-        }
-        cout << "a3";
-        rho = sqrt(px*px + py*py);
-        phi = 0;
-        rhodot = 0;
-  
-      } else {
-        cout << "a4";
-        rho = sqrt(px*px + py*py);
-        phi = atan2(py,px); //  arc tangent of y/x, in the interval [-pi,+pi] radians.
-        rhodot = (px*vx + py*vy) /rho;
-      }      
-      cout << "a5";
-      ekf_.hx_ << rho, phi, rhodot;
-      cout << "before jac";
-      // set H_ to Hj when updating with a radar measurement
-      Hj_ = tools.CalculateJacobian(ekf_.x_);
-      cout << "after jac";
-      // don't update measurement if we can't compute the Jacobian
-      if (Hj_.isZero(0)){
-        cout << "Hj is zero" << endl;
-        return;
-      }
-      
-      ekf_.H_ = Hj_;
-
-      ekf_.R_ = R_radar_;
-
-ekf_.UpdateEKF(measurement_pack.raw_measurements_); 
+    // Use Jacobian instead of H
+    ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
+    ekf_.R_ = R_radar_;
+    ekf_.UpdateEKF(measurement_pack.raw_measurements_);
   } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
     // Laser updates
     ekf_.H_ = H_laser_;
@@ -207,6 +174,6 @@ ekf_.UpdateEKF(measurement_pack.raw_measurements_);
   }
 
   // print the output
-  cout << "x_ = " << ekf_.x_ << endl;
-  cout << "P_ = " << ekf_.P_ << endl;
+  //cout << "x_ = " << ekf_.x_ << endl;
+  //cout << "P_ = " << ekf_.P_ << endl;
 }

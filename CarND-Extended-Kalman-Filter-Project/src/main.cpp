@@ -59,7 +59,7 @@ int main()
           istringstream iss(sensor_measurment);
           long long timestamp;
 
-          cout << sensor_measurment << endl;
+          //cout << sensor_measurment << endl;
           // reads first element from the current line
           string sensor_type;
           iss >> sensor_type;
@@ -105,22 +105,19 @@ int main()
           
           //Call ProcessMeasurment(meas_package) for Kalman filter
           fusionEKF.ProcessMeasurement(meas_package);
-          cout << "2" << endl;
           //Push the current estimated x,y positon from the Kalman filter's state vector
           double p_x = fusionEKF.ekf_.x_(0);
           double p_y = fusionEKF.ekf_.x_(1);
-          double v1  = fusionEKF.ekf_.x_(2);
+          double v1 = fusionEKF.ekf_.x_(2);
           double v2 = fusionEKF.ekf_.x_(3);
           VectorXd estimate(4);
           estimate(0) = p_x;
           estimate(1) = p_y;
           estimate(2) = v1;
           estimate(3) = v2;
-          cout << "3" << endl;
           estimations.push_back(estimate);
 
           VectorXd RMSE = tools.CalculateRMSE(estimations, ground_truth);
-          cout << "4" << endl;
           json msgJson;
           msgJson["estimate_x"] = p_x;
           msgJson["estimate_y"] = p_y;
@@ -131,7 +128,6 @@ int main()
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
           // cout << msg << endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-          cout << "5" << endl;
         }
       } else {
         string msg = "42[\"manual\",{}]";
@@ -139,7 +135,6 @@ int main()
       }
     }
   });
-  cout << "6" << endl;
 
   // We don't need this since we're not using HTTP but if it's removed the program
   // doesn't compile :-(
