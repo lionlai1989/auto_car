@@ -31,14 +31,14 @@ FusionEKF::FusionEKF()
 
   // laser's transformation measurement matrix
   H_laser_ = MatrixXd(2, 4);
-  H_laser_ << 0.09, 0, 0, 0,
-              0, 0.0009, 0, 0;
+  H_laser_ << 1, 0, 0, 0,
+              0, 1, 0, 0;
 
   // transformation measurement jacobian matrix
   Hj_ = MatrixXd(3, 4);
-  Hj_ << 0.09, 0, 0, 0,
-         0, 0.0009, 0, 0,
-         0, 0, 0.09, 0;
+//  Hj_ << 0.09, 0, 0, 0,
+//         0, 0.0009, 0, 0,
+//         0, 0, 0.09, 0;
 
   VectorXd x = VectorXd(4);
   x << 0, 0, 0, 0;
@@ -52,25 +52,25 @@ FusionEKF::FusionEKF()
 
   // state transition matrix
   MatrixXd F = MatrixXd(4, 4);
-  F << 1, 0, 0, 0,
-       0, 1, 0, 0,
-       0, 0, 1, 0,
-       0, 0, 0, 1;
+//  F << 1, 0, 0, 0,
+//       0, 1, 0, 0,
+//       0, 0, 1, 0,
+//       0, 0, 0, 1;
 
   // covariance matrix of process noise
   MatrixXd Q = MatrixXd(4,4);
-  Q << 1, 0, 0, 0,
-       0, 1, 0, 0,
-       0, 0, 1, 0,
-       0, 0, 0, 1;
+//  Q << 1, 0, 0, 0,
+//       0, 1, 0, 0,
+//       0, 0, 1, 0,
+//       0, 0, 0, 1;
 
   MatrixXd H = MatrixXd(4, 4);
-  H << 1, 0, 0, 0,
-       0, 1, 0, 0,
-       0, 0, 1, 0,
-       0, 0, 0, 1;
+//  H << 1, 0, 0, 0,
+//       0, 1, 0, 0,
+//       0, 0, 1, 0,
+//       0, 0, 0, 1;
 
-  ekf_.Init(x, P, F, Q, H);
+  ekf_.Init(x, P);
 }
 
 FusionEKF::~FusionEKF() {}
@@ -133,6 +133,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
   double dt = (measurement_pack.timestamp_ - previous_timestamp_);
   dt = dt / 1000000.0; // convert micro second to second.
   previous_timestamp_ = measurement_pack.timestamp_;
+  ekf_.F_ = MatrixXd(4, 4);
   ekf_.F_ << 1, 0, dt, 0,
              0, 1, 0, dt,
              0, 0, 1, 0,
@@ -147,6 +148,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
   float dt_4 = dt_3 * dt; //dt^4
   float dt_4_4 = dt_4 / 4; //dt^4/4
   float dt_3_2 = dt_3 / 2; //dt^3/2
+  ekf_.Q_ = MatrixXd(4, 4);
   ekf_.Q_ << dt_4_4 * noise_ax, 0, dt_3_2 * noise_ax, 0,
              0, dt_4_4 * noise_ay, 0, dt_3_2 * noise_ay,
              dt_3_2 * noise_ax, 0, dt_2 * noise_ax, 0,
