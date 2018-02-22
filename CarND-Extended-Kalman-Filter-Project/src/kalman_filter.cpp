@@ -16,9 +16,7 @@ KalmanFilter::KalmanFilter() {}
 
 KalmanFilter::~KalmanFilter() {}
 
-void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in) {
-  x_ = x_in;
-  P_ = P_in;
+void KalmanFilter::Init() {
 }
 
 void KalmanFilter::Predict() {
@@ -52,7 +50,8 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
    * update the state by using Extended Kalman Filter equations
    */
   double rho = sqrt(x_(0)*x_(0) + x_(1)*x_(1));
-  double theta = atan(x_(1) / x_(0));
+//  double theta = atan(x_(1) / x_(0));
+  double theta = atan2(x_(1), x_(0));
   double rho_dot = (x_(0)*x_(2) + x_(1)*x_(3)) / rho;
   VectorXd h = VectorXd(3); // h(x_)
   h << rho, theta, rho_dot;

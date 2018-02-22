@@ -14,16 +14,14 @@ public:
   // state transition matrix
   Eigen::MatrixXd F_;
 
-  // process covariance matrix
+  // covariance matrix of process noise
   Eigen::MatrixXd Q_;
 
-  // transformation matrix
+  // transformation measurement matrix
   Eigen::MatrixXd H_;
 
-  // measurement covariance matrix
+  // covariance matrix of measurement noise
   Eigen::MatrixXd R_;
-
-//  Eigen::VectorXd hx_;
 
   KalmanFilter();
 
@@ -38,7 +36,7 @@ public:
    * @param R_in Measurement covariance matrix
    * @param Q_in Process covariance matrix
    */
-  void Init(Eigen::VectorXd &x_in, Eigen::MatrixXd &P_in);
+  void Init();
 
   /*
    * Prediction Predicts the state and the state covariance
