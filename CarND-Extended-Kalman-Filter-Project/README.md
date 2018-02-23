@@ -1,7 +1,42 @@
-# Extended Kalman Filter Project Starter Code
-Self-Driving Car Engineer Nanodegree Program
+# Extended Kalman Filter Project
 
 In this project you will utilize a kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project rubric. 
+
+---
+
+Here is my result.  
+Blue point: measurement value of radar  
+Red point: measurement value of lader  
+Green point: prediction of car's position  
+
+[bug]: ./result_image/bug.jpg
+[fix_bug]: ./result_image/fix_bug.jpg
+
+![alt text][bug]
+
+As you can see, the first graph shows there two problems. First, the rmse of y value is too large. Second, the prediction is deviated from the car's ground truth position when the car is driving toward the center point.
+
+After carefully examining the code and the tips from course, I found out the following line is extremely important.
+
+> In C++, atan2() returns values between -pi and pi. When calculating phi in y = z - h(x) for radar measurements, the resulting angle phi in the y vector should be adjusted so that it is between -pi and pi. The Kalman filter is expecting small angle values between the range -pi and pi. HINT: when working in radians, you can add 2π2\pi2π or subtract 2π2\pi2π until the angle is within the desired range.
+
+And the following code was added correspondingly in `kalman_filter.cpp`.
+
+```c++
+while (y(1) > 3.14159 or y(1) < -3.14159) {
+  if (y(1) > 3.14159) {
+    y(1) = y(1) - 6.28318;
+  } else if (y(1) < -3.14159) {
+    y(1) = y(1) + 6.28318;
+  }
+}
+```
+
+![alt text][fix_bug]
+
+Now the rmse is within the required value.
+
+---
 
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
 

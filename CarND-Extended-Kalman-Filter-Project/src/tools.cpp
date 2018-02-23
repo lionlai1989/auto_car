@@ -11,9 +11,6 @@ using std::endl;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-#define EPS 0.0001 // A very small number
-#define EPS2 0.0000001
-
 Tools::Tools() {}
 
 Tools::~Tools() {}
@@ -25,18 +22,15 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
   assert (estimations.size() == ground_truth.size() && "estimations and ground_truth size should be the same.");
 
   VectorXd rmse(4);
-  rmse << 0,0,0,0;
+  rmse << 0, 0, 0, 0;
 
-  // Accumulate squared residuals
-  for (unsigned int i=0; i < estimations.size(); ++i) {
+  for (unsigned int i = 0; i < estimations.size(); ++i) {
     VectorXd diff = estimations[i] - ground_truth[i];
     
-    // Coefficient-wise multiplication
     diff = diff.array() * diff.array();
     rmse += diff;
   }
   
-  // Calculate the mean
   rmse = rmse / estimations.size();
   rmse = rmse.array().sqrt();
   return rmse;
@@ -44,25 +38,27 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
 
 MatrixXd Tools::CalculateJacobian(const VectorXd &x_state)
 {
-  // Code from lectures quizes
-  float px = x_state(0);
-  float py = x_state(1);
-  float vx = x_state(2);
-  float vy = x_state(3);
+  double px = x_state(0);
+  double py = x_state(1);
+  double vx = x_state(2);
+  double vy = x_state(3);
   MatrixXd Hj(3,4);
-  // Deal with the special case problems
-  if (fabs(px) < EPS and fabs(py) < EPS) {
-    px = EPS;
-    py = EPS;
-  }
+
   // Pre-compute a set of terms to avoid repeated calculation
-  float c1 = px*px+py*py;
+  double c1 = px*px+py*py;
+  double c2 = sqrt(c1);
+  double c3 = (c1*c2);
+
   // Check division by zero
-  if (fabs(c1) < EPS2) {
-    c1 = EPS2;
+  if (c1 < 0.0000001) {
+    c1 = 0.0001;
   }
-  float c2 = sqrt(c1);
-  float c3 = (c1*c2);
+  if (c2 < 0.0000001) {
+    c2 = 0.0001;
+  }
+  if (c3 < 0.0000001) {
+    c3 = 0.0001;
+  }
   // Compute the Jacobian matrix
   Hj << (px/c2), (py/c2), 0, 0,
        -(py/c1), (px/c1), 0, 0,

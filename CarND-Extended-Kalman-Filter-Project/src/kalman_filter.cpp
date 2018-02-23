@@ -16,9 +16,6 @@ KalmanFilter::KalmanFilter() {}
 
 KalmanFilter::~KalmanFilter() {}
 
-void KalmanFilter::Init() {
-}
-
 void KalmanFilter::Predict() {
   /*
    * predict the state
@@ -31,16 +28,14 @@ void KalmanFilter::Update(const VectorXd &z) {
   /*
    * update the state by using Kalman Filter equations
    */
-
   VectorXd y = z - H_ * x_;
 
   MatrixXd Ht = H_.transpose();  
   MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd Si = S.inverse();
-  MatrixXd K = P_ * Ht * Si;
+  MatrixXd K = P_ * Ht * S.inverse();
 
   x_ = x_ + (K * y);
-  long x_size = x_.size();
+  int x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
   P_ = (I - K * H_) * P_;
 }
@@ -49,22 +44,44 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /*
    * update the state by using Extended Kalman Filter equations
    */
-  double rho = sqrt(x_(0)*x_(0) + x_(1)*x_(1));
-//  double theta = atan(x_(1) / x_(0));
-  double theta = atan2(x_(1), x_(0));
-  double rho_dot = (x_(0)*x_(2) + x_(1)*x_(3)) / rho;
-  VectorXd h = VectorXd(3); // h(x_)
-  h << rho, theta, rho_dot;
+  double px = x_(0);
+  double py = x_(1);
+  double vx = x_(2);
+  double vy = x_(3);
+  double rho = sqrt(px * px + py * py);
+  // arctan can deal with px = 0.
+  double theta = atan2(py, px);
+  if (rho < 0.0000001) {
+    rho = 0.0001;
+  }
+  double rho_dot = (px * vx + py * vy) / rho;
+
+  VectorXd h_x_ = VectorXd(3);
+  h_x_ << rho, theta, rho_dot;
   
-  VectorXd y = z - h;
+  VectorXd y = z - h_x_;
+  /* Tips from course:
+   * In C++, atan2() returns values between -pi and pi. When calculating phi 
+   * in y = z - h(x) for radar measurements, the resulting angle phi in the 
+   * y vector should be adjusted so that it is between -pi and pi. The Kalman
+   *  filter is expecting small angle values between the range -pi and pi. 
+   * HINT: when working in radians, you can add 2*pi or subtract 2*pi until 
+   * the angle is within the desired range.
+   */
+  while (y(1) > 3.14159 or y(1) < -3.14159) {
+    if (y(1) > 3.14159) {
+      y(1) = y(1) - 6.28318;
+    } else if (y(1) < -3.14159) {
+      y(1) = y(1) + 6.28318;
+    }
+  }
 
   MatrixXd Ht = H_.transpose();  
   MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd Si = S.inverse();
-  MatrixXd K = P_ * Ht * Si;
+  MatrixXd K = P_ * Ht * S.inverse();
 
   x_ = x_ + (K * y);
-  long x_size = x_.size();
+  int x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
   P_ = (I - K * H_) * P_;
 }
