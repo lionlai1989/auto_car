@@ -9,6 +9,11 @@ using std::endl;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
+void NormalizeAngle(double& phi)
+{
+  phi = atan2(sin(phi), cos(phi));
+}
+
 // Please note that the Eigen library does not initialize 
 // VectorXd or MatrixXd objects with zeros upon creation.
 
@@ -35,9 +40,7 @@ void KalmanFilter::Update(const VectorXd &z) {
   MatrixXd K = P_ * Ht * S.inverse();
 
   x_ = x_ + (K * y);
-  int x_size = x_.size();
-  MatrixXd I = MatrixXd::Identity(x_size, x_size);
-  P_ = (I - K * H_) * P_;
+  P_ -= K * H_ * P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
@@ -49,7 +52,11 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   double vx = x_(2);
   double vy = x_(3);
   double rho = sqrt(px * px + py * py);
-  // arctan can deal with px = 0.
+
+  if (py == 0 && px == 0) {
+    py = 0.0001;
+    px = 0.0001;
+  }
   double theta = atan2(py, px);
   if (rho < 0.0000001) {
     rho = 0.0001;
@@ -68,20 +75,12 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
    * HINT: when working in radians, you can add 2*pi or subtract 2*pi until 
    * the angle is within the desired range.
    */
-  while (y(1) > 3.14159 or y(1) < -3.14159) {
-    if (y(1) > 3.14159) {
-      y(1) = y(1) - 6.28318;
-    } else if (y(1) < -3.14159) {
-      y(1) = y(1) + 6.28318;
-    }
-  }
+  NormalizeAngle(y(1));
 
   MatrixXd Ht = H_.transpose();  
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd K = P_ * Ht * S.inverse();
 
   x_ = x_ + (K * y);
-  int x_size = x_.size();
-  MatrixXd I = MatrixXd::Identity(x_size, x_size);
-  P_ = (I - K * H_) * P_;
+  P_ -= K * H_ * P_;
 }
